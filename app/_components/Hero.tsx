@@ -1,5 +1,6 @@
 "use client"
 import { Button } from "@/components/ui/button";
+import { SignInButton } from "@clerk/nextjs";
 import {
   ArrowUp,
   HomeIcon,
@@ -60,9 +61,10 @@ const Hero = () => {
           <Button variant={"ghost"}>
             <ImagePlus />
           </Button>
+          <SignInButton mode="modal">
           <Button size={"icon"}>
             <ArrowUp />
-          </Button>
+          </Button></SignInButton>
         </div>
       </div>
       {/* Suggestion section */}
