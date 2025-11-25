@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { SignInButton } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import path from "path";
@@ -31,14 +32,22 @@ const Headers = () => {
 
       {/* Menu Options */}
       <div className="space-x-3">
-       {MenuItems.map((item , index)=>(
-        <Button className="rounded-2xl" key={index} variant={'ghost'}>{item.name}</Button>
-       ))}
+        {MenuItems.map((item, index) => (
+          <Button className="rounded-2xl" key={index} variant={"ghost"}>
+            {item.name}
+          </Button>
+        ))}
       </div>
       {/* Signin Section */}
       <div>
-        <Button size={"lg"}
-         className="hover:bg-white hover:text-black transition-all duration-300 rounded-2xl cursor-pointer" >Get Started <ArrowRight/></Button>
+        <SignInButton mode="modal" forceRedirectUrl={'/workspace'}>
+          <Button
+            size={"lg"}
+            className="hover:bg-white hover:text-black transition-all duration-300 rounded-2xl cursor-pointer"
+          >
+            Get Started <ArrowRight />
+          </Button>
+        </SignInButton>
       </div>
     </div>
   );
