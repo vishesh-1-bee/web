@@ -1,11 +1,14 @@
+"use client";
 import { Button } from "@/components/ui/button";
-import { SignInButton } from "@clerk/nextjs";
+import { SignInButton, useUser } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import path from "path";
 import React from "react";
 
 const Headers = () => {
+  const { user } = useUser();
   const MenuItems = [
     {
       name: "Pricing",
@@ -40,14 +43,24 @@ const Headers = () => {
       </div>
       {/* Signin Section */}
       <div>
-        <SignInButton mode="modal" forceRedirectUrl={'/workspace'}>
+        {!user ? (
+          <SignInButton mode="modal" forceRedirectUrl={"/workspace"}>
+            <Button
+              size={"lg"}
+              className="hover:bg-white hover:text-black transition-all duration-300 rounded-2xl cursor-pointer"
+            >
+              Get Started <ArrowRight />
+            </Button>
+          </SignInButton>
+        ) : (
+          <Link href={'/workspace'}>
           <Button
             size={"lg"}
             className="hover:bg-white hover:text-black transition-all duration-300 rounded-2xl cursor-pointer"
           >
             Get Started <ArrowRight />
-          </Button>
-        </SignInButton>
+          </Button></Link>
+        )}
       </div>
     </div>
   );
