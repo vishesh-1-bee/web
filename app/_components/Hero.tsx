@@ -1,18 +1,60 @@
 "use client"
 import { Button } from "@/components/ui/button";
-import { SignInButton } from "@clerk/nextjs";
+import { SignInButton, useUser } from "@clerk/nextjs";
+import axios from "axios";
+import { v4 as uuidv4 } from 'uuid';
 import {
   ArrowUp,
   HomeIcon,
   ImagePlus,
   Key,
   LayoutDashboard,
+  LoaderIcon,
   User,
 } from "lucide-react";
+import Link from "next/link";
 import React, { useState } from "react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
 
 const Hero = () => {
     const[userimput , setuserinput] = useState<string>()
+    const {user}= useUser()
+   const router = useRouter()
+   const[loading , setloading] = useState(false)
+
+
+    const createNewProject = async()=>{
+      setloading(true)
+      try {
+        //using uuid package fro the unique project id
+        const projectId=uuidv4()
+        const frame=generateRandomFrame();
+        const messages = [
+          {
+            role:'user',
+            content:userimput
+          }
+        ]
+
+        const results = await axios.post("/api/users/project",{
+          projectId:projectId,
+          frameId:frame,
+          messages:messages
+        })
+        console.log(results.data);
+        toast.success('project created')
+
+        //naigate to the palygroung page 
+        router.push(`/playground/${projectId}?frameId=${frame}`)
+        setloading(false)
+      } catch (error) {
+        toast.error("internal server error")
+        console.log(error);
+        
+      }
+    }
   const suggestion = [
     {
       label: "Dashboard",
@@ -61,10 +103,17 @@ const Hero = () => {
           <Button variant={"ghost"}>
             <ImagePlus />
           </Button>
-          <SignInButton mode="modal">
-          <Button size={"icon"}>
+          {!user ?  <SignInButton mode="modal" forceRedirectUrl={'/workspace'}>
+          <Button size={"icon"} disabled={!userimput}>
             <ArrowUp />
           </Button></SignInButton>
+          :
+          
+          <Button size={"icon"} disabled={!userimput || loading} onClick={createNewProject}>
+            {loading ? <LoaderIcon className="animate-spin"/>:<ArrowUp /> }
+          </Button>
+          }
+         
         </div>
       </div>
       {/* Suggestion section */}
@@ -81,3 +130,9 @@ const Hero = () => {
 };
 
 export default Hero;
+
+
+ const generateRandomFrame=()=>{
+      const num = Math.floor(Math.random()*10000);
+      return num
+    }
