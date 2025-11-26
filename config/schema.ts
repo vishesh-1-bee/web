@@ -1,4 +1,5 @@
-import { integer, pgTable, varchar } from "drizzle-orm/pg-core";
+
+import { integer, json, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -6,3 +7,27 @@ export const usersTable = pgTable("users", {
   email: varchar({ length: 255 }).notNull().unique(),
   credits:integer().default(2)
 });
+
+export const projectTable= pgTable("projects",{
+   id: integer().primaryKey().generatedAlwaysAsIdentity(),
+   projectId:varchar(),
+   createdBy:varchar().references(()=>usersTable.email),
+   createdon:timestamp().defaultNow()
+})
+
+export const frameTable = pgTable("frames",{
+   id: integer().primaryKey().generatedAlwaysAsIdentity(),
+   frameId:varchar(),
+   projectId:varchar().references(()=>projectTable.projectId  )
+})
+
+
+export const chatTable= pgTable("chats",{
+   id: integer().primaryKey().generatedAlwaysAsIdentity(),
+   chatMesages: json(),
+    createdBy:varchar().references(()=>usersTable.email),
+   createdon:timestamp().defaultNow()
+})
+
+//here we created last three table to set the projectid and no of frame used and the chat messages in the db
+//note: after making changes in schema always push it in th edrizzel
