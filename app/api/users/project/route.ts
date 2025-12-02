@@ -20,7 +20,8 @@ const frameResult =await db.insert(frameTable).values({
     //create mesage section
     const chatResult = await db.insert(chatTable).values({
         chatMesages:messages,
-        createdBy:user?.primaryEmailAddress?.emailAddress
+        createdBy:user?.primaryEmailAddress?.emailAddress,
+        frameId:frameId,
     })
     return NextResponse.json({
         projectId,frameId,messages
