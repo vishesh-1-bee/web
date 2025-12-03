@@ -46,13 +46,12 @@ const Chatsection = ({ messages, onSend, loading }: Props) => {
           ))
         )}
 
-        {loading && 
-         <div className="flex justify-center items-center p-2">
-          <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-zinc-700">
-            <span className="ml-2 text-zinc-400">Working on your request..</span>
+        {loading && (
+          <div className="flex justify-center items-center gap-3 p-2">
+            <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-zinc-700"></div>
+            <span className="text-zinc-400">Working on your request...</span>
           </div>
-        </div>}
-       
+        )}
       </div>
       {/* Footer input section */}
       <div className="p-3 border-t flex items-center gap-3">
