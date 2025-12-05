@@ -6,6 +6,7 @@ import Chatsection from "../_components/Chatsection";
 import Websitesection from "../_components/Websitesection";
 import { useParams, useSearchParams } from "next/navigation";
 import axios from "axios";
+import { toast } from "sonner";
 
 export type Frame = {
   projectId: string;
@@ -35,6 +36,7 @@ Trigger this mode ONLY if the user input explicitly asks for:
 - Web components, dashboards, landing pages, templates
 - Any instruction containing verbs like “create”, “build”, “generate”, “design” in a UI/code context
 
+
 When in CODE GENERATION MODE, follow ALL rules below:
 1. Generate complete **HTML with Tailwind CSS**, using **Flowbite UI components**.
 2. Use a **modern design** with **blue as the primary color theme**.
@@ -53,6 +55,10 @@ When in CODE GENERATION MODE, follow ALL rules below:
 10. Nav items should be spaced apart.
 11. No broken links.
 12. Do NOT add any explanation before or after the HTML.
+13. Every hero section, card, feature block, or section with visual content MUST contain at least one <img> using the placeholder URLs.
+14. Use <img> tags freely in the layout. Never skip images.
+
+
 
 ====================================================
 MODE 2 — TEXT RESPONSE MODE
@@ -92,6 +98,10 @@ const PlayGround = () => {
     );
 
     setFrameDetails(result.data);
+
+    //fetch the saved code and diapy it to 
+    const designCode= result.data?.designCode;
+    setGeneratedCode(designCode)
 
     if (result.data?.chatmessage?.length === 1) {
       const usermessage = result.data.chatmessage[0].content;
@@ -155,6 +165,8 @@ const PlayGround = () => {
         continue;
       }
     }
+    //saaving generated ai response to db
+     await saveCode(airesponse)
 
     // If no HTML → normal text reply
     if (!isCode) {
@@ -165,7 +177,6 @@ const PlayGround = () => {
         { role: "assistant", content: "Your code is ready!" },
       ]);
     }
-
     setLoading(false);
   };
 
@@ -186,6 +197,17 @@ const PlayGround = () => {
     });
   };
 
+  //api calling to save the generated code in the db
+  const saveCode = async(code:string)=>{
+    const result= await axios.put('/api/frames',{
+       designCode:code,
+       frameId:frameId
+    })
+    console.log(result.data);
+    toast.success('Website is ready')
+    
+  }
+
   return (
     <div>
       <PlaygroundHeader />
@@ -197,7 +219,7 @@ const PlayGround = () => {
           loading={loading}
         />
 
-        <Websitesection generatedCode={generatedCode} />
+        <Websitesection generatedCode={generatedCode?.replace('```', " ")} />
       </div>
     </div>
   );
