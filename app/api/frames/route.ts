@@ -26,3 +26,15 @@ export async function GET(req: NextRequest) {
    }
    return NextResponse.json(finalResult)
 }
+
+
+export async function PUT(req:NextRequest) {
+   const {designCode ,frameId}=await req.json();
+
+   const result =await db.update(frameTable).set({
+      designCode:designCode,
+
+   }).where(eq(frameTable.frameId, frameId))
+
+   return NextResponse.json({result})
+}
