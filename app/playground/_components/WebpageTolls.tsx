@@ -1,9 +1,16 @@
 import { Button } from "@/components/ui/button";
-import { Monitor, SquareArrowUp, TabletSmartphone } from "lucide-react";
-import React, { useState } from "react";
+import {
+  Code2Icon,
+  Download,
+  Monitor,
+  SquareArrowUp,
+  TabletSmartphone,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { blob } from "stream/consumers";
+import Viewcode from "./Viewcode";
 
-const HTML_CODE=`<!DOCTYPE html>
+const HTML_CODE = `<!DOCTYPE html>
       <html lang="en">
       <head>
         <meta charset="UTF-8" />
@@ -31,26 +38,47 @@ const HTML_CODE=`<!DOCTYPE html>
       <body id="root">
 {code}
 </body>
-      </html>`
+      </html>`;
 
-const WebpageTolls = ({ selectedScreenSize, setselectedScreenSize ,generatedCode }: any) => {
+const WebpageTolls = ({
+  selectedScreenSize,
+  setselectedScreenSize,
+  generatedCode,
+}: any) => {
+  const [finalcode, setfinalcode] = useState<string>();
+
+  useEffect(() => {
+    const cleancode = HTML_CODE.replace("{code}", generatedCode || " ")
+      .replaceAll("```html", "")
+      .replace("```", "")
+      .replaceAll("html", "");
+    setfinalcode(cleancode);
+  }, [generatedCode]);
+
   const viewinNewtab = () => {
-if (!generatedCode) {
-  return;
-}
-const cleancode = (HTML_CODE.replace('{code}',generatedCode || " "))
-.replaceAll("```html","")
-.replace('```','')
-.replaceAll('html','')
+    if (!finalcode) {
+      return;
+    }
 
+    //cretaing the object for oprning in new window
+    const blob = new Blob([finalcode], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
 
-//cretaing the object for oprning in new window
-const blob = new Blob([cleancode],{type:'text/html'})
-const url= URL.createObjectURL(blob)
-
-window.open(url , '_blank')
+    window.open(url, "_blank");
   };
 
+  //method to sownload the code in html
+  const downloadCode= ()=>{
+    const blob = new Blob([finalcode ?? ""], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a')
+    a.href=url;
+    a.download='code.html';
+    document.body.appendChild(a)
+    a.click();
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
   return (
     <div className="p-1 shadow-xl flex justify-between rounded-xl border-2 w-full">
       <div className="flex gap-2">
@@ -73,9 +101,18 @@ window.open(url , '_blank')
           <TabletSmartphone />
         </Button>
       </div>
-      <div>
+      <div className="flex gap-2">
         <Button variant={"outline"} onClick={() => viewinNewtab()}>
           view <SquareArrowUp />
+        </Button>
+        <Viewcode code={finalcode}>
+         <div className="flex ">
+          <Button>code view</Button>
+          
+         </div>
+        </Viewcode>
+        <Button onClick={downloadCode} variant={"outline"}>
+          Download <Download />
         </Button>
       </div>
     </div>

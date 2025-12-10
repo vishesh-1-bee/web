@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import WebpageTolls from "./WebpageTolls";
+import Settingsection from "./Settingsection";
 
 type Props = {
   generatedCode: string;
@@ -8,6 +9,7 @@ type Props = {
 
 const Websitesection = ({ generatedCode, }: Props) => {
   const [selectedScreenSize,setselectedScreenSize]=useState('web')
+  const [selectedelement , setselectedelement]=useState<HTMLElement | null>()
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Load iframe shell
@@ -47,49 +49,132 @@ const Websitesection = ({ generatedCode, }: Props) => {
 
       <body id="root"></body>
       </html>
-    `);
+    `); 
     doc.close();
   }, []);
 
   // Inject HTML into iframe
-  useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
+  // Inject HTML into iframe + enable element selection/editing
+useEffect(() => {
+  const iframe = iframeRef.current;
+  if (!iframe) return;
 
-    const doc = iframe.contentDocument;
-    if (!doc) return;
+  const doc = iframe.contentDocument;
+  if (!doc) return;
 
-    const root = doc.getElementById("root");
-    if (!root) return;
+  const root = doc.getElementById("root");
+  if (!root) return;
 
-    // Extract clean <body> inner content
-    const parser = new DOMParser();
-    const html = parser.parseFromString(generatedCode, "text/html");
-    root.innerHTML = html.body.innerHTML || generatedCode;
+  // Parse and insert HTML
+  const parser = new DOMParser();
+  const html = parser.parseFromString(generatedCode, "text/html");
+  root.innerHTML = html.body.innerHTML || generatedCode;
 
-    // Re-init libraries inside iframe
-    setTimeout(() => {
-      if ((iframe.contentWindow as any)?.AOS) {
-        (iframe.contentWindow as any).AOS.init();
-      }
+  // Re-init libraries inside iframe
+  setTimeout(() => {
+    if ((iframe.contentWindow as any)?.AOS) {
+      (iframe.contentWindow as any).AOS.init();
+    }
+    if ((iframe.contentWindow as any)?.lucide) {
+      (iframe.contentWindow as any).lucide.createIcons();
+    }
+  }, 50);
 
-      if ((iframe.contentWindow as any)?.lucide) {
-        (iframe.contentWindow as any).lucide.createIcons();
-      }
-    }, 50);
-  }, [generatedCode]);
+
+  /* ---------------------------------------------------------------------
+     INSERTED CODE FROM IMAGE STARTS HERE
+  --------------------------------------------------------------------- */
+
+  let hoverEl: HTMLElement | null = null;
+  let selectedEl: HTMLElement | null = null;
+
+  const handleMouseOver = (e: MouseEvent) => {
+    if (selectedEl) return;
+    const target = e.target as HTMLElement;
+    if (hoverEl && hoverEl === target) return;
+    if (hoverEl) hoverEl.style.outline = "";
+
+    hoverEl = target;
+    hoverEl.style.outline = "2px dotted blue";
+  };
+
+  const handleMouseOut = (e: MouseEvent) => {
+    if (selectedEl) return;
+    if (!hoverEl) return;
+
+    hoverEl.style.outline = "";
+    hoverEl = null;
+  };
+
+  const handleClick = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.target as HTMLElement;
+
+    if (selectedEl && selectedEl !== target) {
+      selectedEl.style.outline = "";
+      selectedEl.removeAttribute("contenteditable");
+    }
+
+    selectedEl = target;
+    selectedEl.style.outline = "2px solid red";
+    selectedEl.setAttribute("contenteditable", "true");
+    selectedEl.focus();
+
+    console.log("Selected element:", selectedEl);
+    setselectedelement(selectedEl)
+  };
+
+  const handleBlur = () => {
+    if (!selectedEl) return;
+    console.log("Final edited element:", selectedEl.outerHTML);
+    selectedEl = null;
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape" && selectedEl) {
+      selectedEl.style.outline = "";
+      selectedEl.removeAttribute("contenteditable");
+      selectedEl = null;
+    }
+  };
+
+  doc.body.addEventListener("mouseover", handleMouseOver);
+  doc.body.addEventListener("mouseout", handleMouseOut);
+  doc.body.addEventListener("click", handleClick);
+  doc.addEventListener("keydown", handleKeyDown);
+
+  return () => {
+    doc.body.removeEventListener("mouseover", handleMouseOver);
+    doc.body.removeEventListener("mouseout", handleMouseOut);
+    doc.body.removeEventListener("click", handleClick);
+    doc.removeEventListener("keydown", handleKeyDown);
+  };
+
+  /* ---------------------------------------------------------------------
+     INSERTED CODE FROM IMAGE ENDS HERE
+  --------------------------------------------------------------------- */
+
+}, [generatedCode]);
+
 
   return (
+    <div className="flex gap-2 w-full">
     <div className="p-4 w-full flex flex-col justify-center">
       <iframe
         ref={iframeRef}
-        className={`${selectedScreenSize=='web' ? 'w-full' : 'w-130'} h-[600px] border rounded`}
+        className={`${selectedScreenSize=='web' ? 'w-full' : 'w-130'} h-[600px] border rounded-xl`}
         sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-modals allow-pointer-lock"
       />
       <WebpageTolls selectedScreenSize={selectedScreenSize}
       setselectedScreenSize={(v: string)=>setselectedScreenSize(v)}
       generatedCode={generatedCode}
       />
+    </div>
+    {/* setting section for the selected elements */}
+    {/* @ts-ignore */}
+    <Settingsection selectedel={selectedelement}  clerselectedel={()=>setselectedelement(null)}/>
     </div>
   );
 };
