@@ -8,6 +8,8 @@ import {
     Expand,
     Image as ImageUpscale, // no lucide-react upscale, using Image icon
     ImageMinus,
+    Loader,
+    Loader2Icon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { log } from "node:console";
 
 type Props = {
     selectedEl: HTMLImageElement;
@@ -46,6 +49,8 @@ function Imagesetting({ selectedEl }: Props) {
     const [preview, setPreview] = useState(selectedEl.src || "");
     const [activeTransforms, setActiveTransforms] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const [selectedImage, setselectedImage]=useState<File>()
+    const [loading , setloading]= useState(false)
 
     // Toggle transform
     const toggleTransform = (value: string) => {
@@ -60,7 +65,9 @@ function Imagesetting({ selectedEl }: Props) {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+
         if (file) {
+            setselectedImage(file)
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPreview(reader.result as string);
@@ -69,10 +76,38 @@ function Imagesetting({ selectedEl }: Props) {
         }
     };
 
+    //meythod to save uploaded image
+    const saveUploadedImage =async()=>{
+        if (selectedImage) {
+            
+            setloading(true)
+
+            const imageref= await imagekit.upload({
+                //@ts-ignore
+                file:selectedImage,
+                fileName:Date.now()+".png",
+                isPublished:true
+            })
+            console.log(imageref)
+            //@ts-ignore
+            selectedEl.setAttribute('src' , imageref?.url)
+            setloading(false)
+        }
+    }
+
     const openFileDialog = () => {
         fileInputRef.current?.click();
     };
 
+
+    const genrateAiImages=()=>{
+        setloading(true)
+
+        const url=`https://ik.imagekit.io/6ceef7h9h/ik-genimg-prompt-${altText}/${Date.now()}.png`;
+        setPreview(url);
+        selectedEl.setAttribute('src', url)
+
+    }
     return (
         <div className="w-96 shadow p-4 space-y-4">
             <h2 className="flex gap-2 items-center font-bold">
@@ -86,6 +121,7 @@ function Imagesetting({ selectedEl }: Props) {
                     alt={altText}
                     className="max-h-40 object-contain border rounded cursor-pointer hover:opacity-80"
                     onClick={openFileDialog}
+                    onLoad={()=>setloading(false)}
                 />
             </div>
 
@@ -103,9 +139,10 @@ function Imagesetting({ selectedEl }: Props) {
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={openFileDialog}
+                onClick={saveUploadedImage}
+                disabled={loading}
             >
-                Upload Image
+              {loading && <Loader2Icon className="animate-spin"/>}  Upload Image
             </Button>
 
             {/* Alt text */}
@@ -120,8 +157,9 @@ function Imagesetting({ selectedEl }: Props) {
                 />
             </div>
 
-            <Button className="w-full">
-                Generate AI Image
+            <Button className="w-full" onClick={genrateAiImages}
+            disabled={loading}>
+               {loading && <Loader2Icon className="animate-spin"/>} Generate AI Image
             </Button>
 
             {/* Transform Buttons */}
